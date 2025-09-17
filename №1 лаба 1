@@ -1,0 +1,21 @@
+from pulp import *
+
+problem = LpProblem("CowFeedOptimization", LpMinimize)
+
+x1 = LpVariable("Hay", lowBound=0)
+x2 = LpVariable("Silage", lowBound=0)
+x3 = LpVariable("Concentrates", lowBound=0)
+
+problem += 1.5 * x1 + 2.0 * x2 + 6.0 * x3, "Total Cost"
+
+problem += 50 * x1 + 70 * x2 + 180 * x3 >= 2000, "ProteinRequirement"
+problem += 10 * x1 + 6 * x2 + 3 * x3 >= 210, "CalciumRequirement"
+problem += 2 * x1 + 3 * x2 + x3 == 0.087, "VitaminRequirement"
+
+problem.solve()
+
+print("Статус:", LpStatus[problem.status])
+print(f"Количество сена (кг): {x1.varValue:.2f}")
+print(f"Количество силоса (кг): {x2.varValue:.2f}")
+print(f"Количество концентратов (кг): {x3.varValue:.2f}")
+print(f"Минимальная стоимость: {value(problem.objective):.2f} у.е.")
