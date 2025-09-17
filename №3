@@ -1,0 +1,22 @@
+from pulp import *
+
+problem = LpProblem("AutoPartsOptimization", LpMaximize)
+
+x1 = LpVariable("PartA", lowBound=0, cat='Integer')
+x2 = LpVariable("PartB", lowBound=0, cat='Integer')
+
+problem += 1.1 * x1 + 1.5 * x2, "TotalRevenue"
+
+problem += 1 * x1 + 2 * x2 <= 5000, "WorkTimeConstraint"
+problem += x1 <= 2500, "ProductionCapacityA"
+problem += x2 <= 2000, "ProductionCapacityB"
+problem += 2 * x1 + 4 * x2 <= 10000, "PolymerMaterial"
+problem += 5 * x1 + 3 * x2 <= 10000, "SheetMetal"
+problem += x1 + x2 >= 1500, "TotalParts"
+
+problem.solve()
+
+print("Статус:", LpStatus[problem.status])
+print(f"Количество деталей типа А: {x1.varValue:.0f}")
+print(f"Количество деталей типа В: {x2.varValue:.0f}")
+print(f"Максимальный доход: {value(problem.objective):.2f} руб.")
