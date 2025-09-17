@@ -1,0 +1,50 @@
+from pulp import *
+
+problem = LpProblem("FactoryProductionOptimization", LpMaximize)
+
+x1 = LpVariable("Product1", lowBound=0, cat='Integer')
+x2 = LpVariable("Product2", lowBound=0, cat='Integer')
+x3 = LpVariable("Product3", lowBound=0, cat='Integer')
+
+problem += 15 * x1 + 22 * x2 + 19 * x3, "TotalProfit"
+
+problem += x1 + x2 + x3 <= 170, "TotalProduction"
+problem += 2 * x1 + 3 * x2 + 2 * x3 <= 360, "Operation1Time"
+problem += x1 + 2 * x2 + 3 * x3 <= 240, "Operation2Time"
+problem += x1 + x2 + 2 * x3 <= 180, "Operation3Time"
+
+problem.solve()
+
+print("Статус:", LpStatus[problem.status])
+print(f"Количество P1: {x1.varValue:.0f}")
+print(f"Количество P2: {x2.varValue:.0f}")
+print(f"Количество P3: {x3.varValue:.0f}")
+print(f"Максимальная прибыль: {value(problem.objective):.2f} $")
+
+print("Анализ сверхурочных работ:")
+print(f"Теневая цена (О1): {problem.constraints['Operation1Time'].pi:.2f} $/чел.-час")
+print(f"Теневая цена (О2): {problem.constraints['Operation2Time'].pi:.2f} $/чел.-час")
+print(f"Теневая цена (О3): {problem.constraints['Operation3Time'].pi:.2f} $/чел.-час")
+
+shadow_price_o1 = problem.constraints['Operation1Time'].pi
+shadow_price_o2 = problem.constraints['Operation2Time'].pi
+shadow_price_o3 = problem.constraints['Operation3Time'].pi
+cost_per_hour = 4
+
+best_operation = None
+max_net_profit = 0
+
+if shadow_price_o1 - cost_per_hour > max_net_profit:
+    max_net_profit = shadow_price_o1 - cost_per_hour
+    best_operation = "О1"
+if shadow_price_o2 - cost_per_hour > max_net_profit:
+    max_net_profit = shadow_price_o2 - cost_per_hour
+    best_operation = "О2"
+if shadow_price_o3 - cost_per_hour > max_net_profit:
+    max_net_profit = shadow_price_o3 - cost_per_hour
+    best_operation = "О3"
+
+if best_operation:
+    print(f"\nНаиболее целесообразны сверхурочные работы на операции {best_operation}, так как чистая прибыль составляет {max_net_profit:.2f} $ за каждый дополнительный час.")
+else:
+    print("\nСверхурочные работы нецелесообразны, так как теневая цена каждой операции ниже 4$.")
